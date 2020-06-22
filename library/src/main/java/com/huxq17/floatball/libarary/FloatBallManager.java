@@ -3,6 +3,7 @@ package com.huxq17.floatball.libarary;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Build;
 import android.view.View;
@@ -46,6 +47,7 @@ public class FloatBallManager {
         floatBall = new FloatBall(mContext, this, ballCfg);
         floatMenu = new FloatMenu(mContext, this, menuCfg);
         statusBarView = new StatusBarView(mContext, this);
+
     }
 
     public FloatBallManager(Activity activity, FloatBallCfg ballCfg) {
@@ -122,19 +124,19 @@ public class FloatBallManager {
     }
 
     public void show() {
-        if (mActivity == null) {
-            if (mPermission == null) {
-                return;
-            }
-            if (!mPermission.hasFloatBallPermission(mContext)) {
-                mPermission.onRequestFloatBallPermission();
-                return;
-            }
-        }
+//        if (mActivity == null) {
+//            if (mPermission == null) {
+//                return;
+//            }
+//            if (!mPermission.hasFloatBallPermission(mContext)) {
+//                mPermission.onRequestFloatBallPermission();
+//                return;
+//            }
+//        }
         if (isShowing) return;
         isShowing = true;
         floatBall.setVisibility(View.VISIBLE);
-        statusBarView.attachToWindow(mWindowManager);
+//        statusBarView.attachToWindow(mWindowManager);
         floatBall.attachToWindow(mWindowManager);
         floatMenu.detachFromWindow(mWindowManager);
     }
@@ -164,7 +166,7 @@ public class FloatBallManager {
         isShowing = false;
         floatBall.detachFromWindow(mWindowManager);
         floatMenu.detachFromWindow(mWindowManager);
-        statusBarView.detachFromWindow(mWindowManager);
+//        statusBarView.detachFromWindow(mWindowManager);
     }
 
     public void onConfigurationChanged(Configuration newConfig) {

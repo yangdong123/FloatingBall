@@ -20,12 +20,14 @@ import com.huxq17.floatball.libarary.LocationService;
 import com.huxq17.floatball.libarary.runner.ICarrier;
 import com.huxq17.floatball.libarary.runner.OnceRunnable;
 import com.huxq17.floatball.libarary.runner.ScrollRunner;
+import com.huxq17.floatball.libarary.utils.DensityUtil;
 import com.huxq17.floatball.libarary.utils.MotionVelocityUtil;
 import com.huxq17.floatball.libarary.utils.Util;
 
 
 public class FloatBall extends FrameLayout implements ICarrier {
 
+    private int floatBallMarginX = DensityUtil.dip2px(getContext(), 9);
     private FloatBallManager floatBallManager;
     private ImageView imageView;
     private WindowManager.LayoutParams mLayoutParams;
@@ -122,7 +124,7 @@ public class FloatBall extends FrameLayout implements ICarrier {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         int height = getMeasuredHeight();
-        int width = getMeasuredWidth();
+        int width = getMeasuredWidth() + floatBallMarginX;
 
         int curX = mLayoutParams.x;
         if (sleep && curX != mSleepX && !mRunner.isRunning()) {
@@ -273,12 +275,12 @@ public class FloatBall extends FrameLayout implements ICarrier {
         int height = getHeight();
         int destY = 0;
         if (mLayoutParams.y < 0) {
-            destY = 0 - mLayoutParams.y;
+            destY = 0 - mLayoutParams.y + floatBallMarginX;
         } else if (mLayoutParams.y > screenHeight - height) {
-            destY = screenHeight - height - mLayoutParams.y;
+            destY = screenHeight - height - mLayoutParams.y - floatBallMarginX;
         }
         if (smooth) {
-            int dx = destX - mLayoutParams.x;
+            int dx = destX - mLayoutParams.x ;
             int duration = getScrollDuration(Math.abs(dx));
             mRunner.start(dx, destY, duration);
         } else {
@@ -293,7 +295,7 @@ public class FloatBall extends FrameLayout implements ICarrier {
         int halfWidth = width / 2;
         int centerX = (screenWidth / 2 - halfWidth);
         int destX;
-        destX = mLayoutParams.x < centerX ? 0 : screenWidth - width;
+        destX = mLayoutParams.x < centerX ? 0 + floatBallMarginX: screenWidth - width - floatBallMarginX;
         sleep = false;
         moveToX(true, destX);
     }
@@ -307,10 +309,10 @@ public class FloatBall extends FrameLayout implements ICarrier {
         final int minVelocity = mVelocity.getMinVelocity();
         if (mLayoutParams.x < centerX) {
             sleep = forceSleep || Math.abs(mVelocityX) > minVelocity && mVelocityX < 0 || mLayoutParams.x < 0;
-            destX = sleep ? -halfWidth : 0;
+            destX = sleep ? -halfWidth : 0 + floatBallMarginX;
         } else {
             sleep = forceSleep || Math.abs(mVelocityX) > minVelocity && mVelocityX > 0 || mLayoutParams.x > screenWidth - width;
-            destX = sleep ? screenWidth - halfWidth : screenWidth - width;
+            destX = sleep ? screenWidth - halfWidth : screenWidth - width - floatBallMarginX;
         }
         if (sleep) {
             mSleepX = destX;

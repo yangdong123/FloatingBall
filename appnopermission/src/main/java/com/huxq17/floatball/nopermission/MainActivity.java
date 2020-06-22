@@ -1,8 +1,12 @@
 package com.huxq17.floatball.nopermission;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -16,28 +20,22 @@ import com.huxq17.floatball.libarary.utils.BackGroudSeletor;
 import com.huxq17.floatball.libarary.utils.DensityUtil;
 
 public class MainActivity extends Activity {
-    private FloatBallManager mFloatballManager;
+
+
+    private static final int OVERLAY_PERMISSION_CODE = 0x1111;
 
     public void showFloatBall(View v) {
 //        mFloatballManager.show();
         setFullScreen(v);
+        showAndHideFloatingBall(this);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        boolean showMenu = true;//换成false试试
-        initSinglePageFloatball(showMenu);
-        //5 如果没有添加菜单，可以设置悬浮球点击事件
-        if (mFloatballManager.getMenuItemSize() == 0) {
-            mFloatballManager.setOnFloatBallClickListener(new FloatBallManager.OnFloatBallClickListener() {
-                @Override
-                public void onFloatBallClick() {
-                    toast("点击了悬浮球");
-                }
-            });
-        }
+
+
     }
 
     @Override
@@ -45,18 +43,18 @@ public class MainActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
     }
 
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        //只有activity被添加到windowmanager上以后才可以调用show方法。
-        mFloatballManager.show();
-    }
-
-    @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mFloatballManager.hide();
-    }
+//    @Override
+//    public void onAttachedToWindow() {
+//        super.onAttachedToWindow();
+//        //只有activity被添加到windowmanager上以后才可以调用show方法。
+//        mFloatballManager.show();
+//    }
+//
+//    @Override
+//    public void onDetachedFromWindow() {
+//        super.onDetachedFromWindow();
+//        mFloatballManager.hide();
+//    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -87,66 +85,36 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void initSinglePageFloatball(boolean showMenu) {
-        //1 初始化悬浮球配置，定义好悬浮球大小和icon的drawable
-        int ballSize = DensityUtil.dip2px(this, 45);
-        Drawable ballIcon = BackGroudSeletor.getdrawble("ic_floatball", this);
-        FloatBallCfg ballCfg = new FloatBallCfg(ballSize, ballIcon, FloatBallCfg.Gravity.RIGHT_CENTER);
-        //设置悬浮球不半隐藏
-//        ballCfg.setHideHalfLater(false);
-        if (showMenu) {
-            //2 需要显示悬浮菜单
-            //2.1 初始化悬浮菜单配置，有菜单item的大小和菜单item的个数
-            int menuSize = DensityUtil.dip2px(this, 180);
-            int menuItemSize = DensityUtil.dip2px(this, 40);
-            FloatMenuCfg menuCfg = new FloatMenuCfg(menuSize, menuItemSize);
-            //3 生成floatballManager
-            //必须传入Activity
-            mFloatballManager = new FloatBallManager(this, ballCfg, menuCfg);
-            addFloatMenuItem();
+    public void showAndHideFloatingBall(Activity context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(context)) {
+                Intent intent = new Intent(this, FloatingBallService.class);
+                startService(intent);
+            } else {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + context.getPackageName()));
+                context.startActivityForResult(intent, OVERLAY_PERMISSION_CODE);
+            }
         } else {
-            //必须传入Activity
-            mFloatballManager = new FloatBallManager(this, ballCfg);
+            Intent intent = new Intent(this, FloatingBallService.class);
+            startService(intent);
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (OVERLAY_PERMISSION_CODE == requestCode) {
+            Intent intent = new Intent(this, FloatingBallService.class);
+            startService(intent);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
 
-    private void toast(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
-
-    private void addFloatMenuItem() {
-        MenuItem personItem = new MenuItem(BackGroudSeletor.getdrawble("ic_weixin", this)) {
-            @Override
-            public void action() {
-                toast("打开微信");
-                mFloatballManager.closeMenu();
-            }
-        };
-        MenuItem walletItem = new MenuItem(BackGroudSeletor.getdrawble("ic_weibo", this)) {
-            @Override
-            public void action() {
-                toast("打开微博");
-            }
-        };
-        MenuItem settingItem = new MenuItem(BackGroudSeletor.getdrawble("ic_email", this)) {
-            @Override
-            public void action() {
-                toast("打开邮箱");
-                mFloatballManager.closeMenu();
-            }
-        };
-        mFloatballManager.addMenuItem(personItem)
-                .addMenuItem(walletItem)
-                .addMenuItem(personItem)
-                .addMenuItem(walletItem)
-                .addMenuItem(settingItem)
-                .buildMenu();
-    }
-
 
     @Override
     protected void onDestroy() {
+        Intent intent = new Intent(this, FloatingBallService.class);
+        stopService(intent);
         super.onDestroy();
     }
 }
